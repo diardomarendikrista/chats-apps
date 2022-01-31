@@ -1,72 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Layout from 'Layout/layout';
-import {
-	Wrapper,
-	RightSection,
-	MessageWrapper,
-	CardWrapper,
-	ReplyBox,
-	NoLogin,
-	BtnLeftSection,
-	LeftSection,
-} from './styles';
-import CardChat from 'Components/CardChat/CardChat';
+import { Wrapper, RightSection, CardRoom } from './styles';
 import axios from 'axios/axios';
-import CardNetizen from 'Components/CardNetizen';
+import ModalNewRoom from 'Components/ModalNewRoom';
 import { ws } from 'socket/ws';
 
 export default function Home() {
-	const { netizen } = useSelector((state) => state.global);
-	const { messages } = useSelector((state) => state.message);
+	// eslint-disable-next-line
 	const { profile, isLogin, refetchUser } = useSelector((state) => state.user);
-	const [inputan, setInputan] = useState('');
-	const [sidebar, setSidebar] = useState(false);
+	const { rooms } = useSelector((state) => state.room);
+	const [showModalNewRoom, setShowModalNewRoom] = useState(false);
 	// eslint-disable-next-line
 	const [loading, setLoading] = useState(false);
 
 	const dispatch = useDispatch();
 
-	function scrollToBottom() {
-		const messages = document.getElementById('messages');
-		if (messages) {
-			// messages.scrollTop = messages.scrollHeight;
-			// messages.window.scrollIntoView({ behavior: 'smooth', block: 'end' });
-			messages.scrollTo({ top: 999999999, behavior: 'smooth' });
-		}
-	}
-
-	const handleSubmit = async (e) => {
-		e.preventDefault();
+	const handleDeleteRoom = async (id) => {
 		try {
-			if (inputan) {
-				const headers = {
-					access_token: localStorage.getItem('access_token'),
-				};
-				const saveData = {
-					message: inputan,
-				};
-
-				const { data } = await axios.post(`/messages`, saveData, { headers });
-				console.log(data);
-				setInputan('');
-			}
+			setLoading(true);
+			console.log(id, 'ROOM ID');
+			const headers = {
+				access_token: localStorage.getItem('access_token'),
+			};
+			const { data } = await axios.delete(`/rooms/${id}`, { headers });
+			console.log(data, 'DATA');
 		} catch (error) {
-			console.log(error?.response, 'error chat');
+			console.log(error, 'ERROR DEL ROOM');
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	const fetchMessage = async () => {
+	const fetchRooms = async () => {
 		try {
 			setLoading(true);
-			const { data } = await axios.get(`/messages`);
-			// console.log(data, 'MESSAGE');
+			const { data } = await axios.get(`/rooms`);
 			if (data) {
-				dispatch({ type: 'message/setMessage', payload: data });
-				scrollToBottom();
+				dispatch({ type: 'rooms/setRooms', payload: data });
 			}
 		} catch (error) {
-			console.log(error, 'ERROR FETCH MESSAGE');
+			console.log(error, 'ERROR FETCH ROOMS');
 		} finally {
 			setLoading(false);
 		}
@@ -90,30 +64,25 @@ export default function Home() {
 		}
 	};
 
-	const updateNetizen = (dataNetizen) => {
-		dispatch({ type: 'netizen/setNetizen', payload: dataNetizen });
-	};
-
 	useEffect(() => {
 		// check local storage
 		if (localStorage.getItem('access_token')) {
 			fetchUser();
 		}
 		//fetch message
-		fetchMessage();
-		// ws = io('http://localhost:4000');
+		fetchRooms();
 
-		ws.on('newChat', newChatCallback);
-		ws.on('updateNetizen', updateNetizen);
+		ws.on('newRoom', newRoomCallback);
 
 		return () => {
-			ws.off('newChat', newChatCallback);
+			ws.off('newRoom', newRoomCallback);
 		};
 		// eslint-disable-next-line
 	}, []);
 
-	const newChatCallback = () => {
-		fetchMessage();
+	const newRoomCallback = () => {
+		console.log('ter trigger??');
+		fetchRooms();
 	};
 
 	// check login status
@@ -135,46 +104,35 @@ export default function Home() {
 
 	return (
 		<Layout>
-			<Wrapper className="klob-max m-auto d-flex justify-content-end">
-				<BtnLeftSection onClick={() => setSidebar(!sidebar)}>
-					<img
-						src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/512x512/users5.png"
-						alt="users"
-						width={'100%'}
-					/>
-				</BtnLeftSection>
-				<LeftSection sidebar={sidebar}>
-					{netizen?.length > 0 &&
-						netizen.map((item, i) => <CardNetizen key={i} data={item} />)}
-				</LeftSection>
-				<RightSection sidebar={sidebar}>
-					<MessageWrapper id="messages">
-						{messages &&
-							messages.map((chat) => (
-								<CardWrapper key={chat.id} self={chat.self}>
-									<CardChat data={chat} self={chat.self} />
-								</CardWrapper>
+			<Wrapper className="klob-max m-auto d-flex justify-content-center">
+				<RightSection>
+					<button
+						className="btn btn-primary"
+						onClick={() => setShowModalNewRoom(true)}
+					>
+						Ruang Baru
+					</button>
+					<div>
+						{rooms?.length > 0 &&
+							rooms.map((room, i) => (
+								<CardRoom key={i}>
+									{room.name}{' '}
+									<span
+										className="text-danger cursor-pointer"
+										onClick={() => handleDeleteRoom(room.id)}
+									>
+										[delete]
+									</span>
+								</CardRoom>
 							))}
-					</MessageWrapper>
-					{profile ? (
-						<form onSubmit={(e) => handleSubmit(e)}>
-							<ReplyBox>
-								<input
-									className="form-control me-2"
-									type="text"
-									value={inputan}
-									onChange={(e) => setInputan(e.target.value)}
-								/>
-								<button type="submit" className="btn btn-info">
-									kirim
-								</button>
-							</ReplyBox>
-						</form>
-					) : (
-						<NoLogin>Login untuk join chat</NoLogin>
-					)}
+					</div>
 				</RightSection>
 			</Wrapper>
+
+			<ModalNewRoom
+				show={showModalNewRoom}
+				onHide={() => setShowModalNewRoom(false)}
+			/>
 		</Layout>
 	);
 }
