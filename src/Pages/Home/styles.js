@@ -9,8 +9,9 @@ export const Wrapper = styled.div`
 export const RightSection = styled.div`
 	position: relative;
 	width: 100%;
-	padding: 20px 20px 60px 20px;
+	padding: 20px 20px 20px 20px;
 	box-shadow: 0px 0px 25px -4px gray;
+	min-height: 85vh;
 	border-radius: 10px;
 
 	@media (max-width: ${M_DEVICES_WIDTH}) {

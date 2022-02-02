@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Title, ProfilePicture, ProfileName } from './styles';
 import { useSelector, useDispatch } from 'react-redux';
 import ModalLogin from 'Components/ModalLogin';
@@ -41,7 +42,9 @@ export default function Navbar() {
 		<>
 			<Title>
 				<div className="d-flex align-items-center">
-					<h3>PITIK CHATS</h3>
+					<Link to="/">
+						<h3>PITIK CHAT</h3>
+					</Link>
 				</div>
 				{profile ? (
 					<div className="d-flex align-items-center">

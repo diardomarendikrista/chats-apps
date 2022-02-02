@@ -10,28 +10,37 @@ import {
 	NoLogin,
 	BtnLeftSection,
 	LeftSection,
+	NotFound,
+	InfoBox,
+	RightWrapper,
 } from './styles';
 import CardChat from 'Components/CardChat/CardChat';
 import axios from 'axios/axios';
 import CardNetizen from 'Components/CardNetizen';
 import { ws } from 'socket/ws';
+import { useNavigate, useParams } from 'react-router-dom';
+import ErrorNotFound from 'Components/Error/NotFound';
 
 export default function Home() {
 	const { netizen } = useSelector((state) => state.global);
 	const { messages } = useSelector((state) => state.message);
 	const { profile, isLogin, refetchUser } = useSelector((state) => state.user);
+	const { room, lastRoom } = useSelector((state) => state.room);
 	const [inputan, setInputan] = useState('');
 	const [sidebar, setSidebar] = useState(false);
 	// eslint-disable-next-line
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
+	// eslint-disable-next-line
+	const [notFound, setNotFound] = useState(false);
+	const [localNetizen, setLocalNetizen] = useState([]);
 
+	const { room_id } = useParams();
 	const dispatch = useDispatch();
+	const navigate = useNavigate();
 
 	function scrollToBottom() {
 		const messages = document.getElementById('messages');
 		if (messages) {
-			// messages.scrollTop = messages.scrollHeight;
-			// messages.window.scrollIntoView({ behavior: 'smooth', block: 'end' });
 			messages.scrollTo({ top: 999999999, behavior: 'smooth' });
 		}
 	}
@@ -47,8 +56,9 @@ export default function Home() {
 					message: inputan,
 				};
 
-				const { data } = await axios.post(`/messages`, saveData, { headers });
-				console.log(data);
+				await axios.post(`/messages/${room_id}`, saveData, {
+					headers,
+				});
 				setInputan('');
 			}
 		} catch (error) {
@@ -59,14 +69,18 @@ export default function Home() {
 	const fetchMessage = async () => {
 		try {
 			setLoading(true);
-			const { data } = await axios.get(`/messages`);
+			const { data } = await axios.get(`/messages/${room_id}`);
 			// console.log(data, 'MESSAGE');
 			if (data) {
 				dispatch({ type: 'message/setMessage', payload: data });
 				scrollToBottom();
 			}
 		} catch (error) {
-			console.log(error, 'ERROR FETCH MESSAGE');
+			if (error?.response?.data?.code === 404) {
+				setNotFound(true);
+			} else {
+				console.log(error.response, 'ERROR FETCH MESSAGE');
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -80,11 +94,27 @@ export default function Home() {
 			};
 			const { data } = await axios.get('/user', { headers });
 			if (data) {
-				ws.emit('login', data.user);
+				let dataUser = data.user;
+				dataUser.room_id = room_id;
+				ws.emit('login', dataUser);
 				dispatch({ type: 'profile/setProfile', payload: data.user });
 			}
 		} catch (error) {
 			console.log(error, 'ERROR FETCH USER');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const fetchRoom = async () => {
+		try {
+			setLoading(true);
+			const { data } = await axios.get(`/rooms/${room_id}`);
+			if (data) {
+				dispatch({ type: 'room/setRoom', payload: data });
+			}
+		} catch (error) {
+			console.log(error, 'ERROR FETCH ROOMS');
 		} finally {
 			setLoading(false);
 		}
@@ -99,15 +129,22 @@ export default function Home() {
 		if (localStorage.getItem('access_token')) {
 			fetchUser();
 		}
-		//fetch message
+		if (!lastRoom || lastRoom !== room_id) {
+			dispatch({ type: 'lastRoom/setLastRoom', payload: room_id});
+			dispatch({ type: 'message/setMessage', payload: false });
+		}
+		
+		fetchRoom();
 		fetchMessage();
-		// ws = io('http://localhost:4000');
 
-		ws.on('newChat', newChatCallback);
+		ws.on(`newchat${room_id}`, newChatCallback);
+		ws.on('newRoom', newChatCallback);
 		ws.on('updateNetizen', updateNetizen);
 
 		return () => {
-			ws.off('newChat', newChatCallback);
+			ws.off(`newchat${room_id}`, newChatCallback);
+			ws.off('newRoom', newChatCallback);
+			ws.off('updateNetizen', updateNetizen);
 		};
 		// eslint-disable-next-line
 	}, []);
@@ -133,6 +170,17 @@ export default function Home() {
 		// eslint-disable-next-line
 	}, [refetchUser]);
 
+	// filter local netizen
+	useEffect(() => {
+		if (netizen) {
+			const newLocalNetizen = netizen.filter((item) => {
+				return item.room_id === room_id;
+			});
+			setLocalNetizen(newLocalNetizen);
+		}
+		// eslint-disable-next-line
+	}, [netizen]);
+
 	return (
 		<Layout>
 			<Wrapper className="klob-max m-auto d-flex justify-content-end">
@@ -144,34 +192,56 @@ export default function Home() {
 					/>
 				</BtnLeftSection>
 				<LeftSection sidebar={sidebar}>
-					{netizen?.length > 0 &&
-						netizen.map((item, i) => <CardNetizen key={i} data={item} />)}
+					{localNetizen?.length > 0 &&
+						localNetizen.map((item, i) => <CardNetizen key={i} data={item} />)}
 				</LeftSection>
 				<RightSection sidebar={sidebar}>
-					<MessageWrapper id="messages">
-						{messages &&
-							messages.map((chat) => (
-								<CardWrapper key={chat.id} self={chat.self}>
-									<CardChat data={chat} self={chat.self} />
-								</CardWrapper>
-							))}
-					</MessageWrapper>
-					{profile ? (
-						<form onSubmit={(e) => handleSubmit(e)}>
-							<ReplyBox>
-								<input
-									className="form-control me-2"
-									type="text"
-									value={inputan}
-									onChange={(e) => setInputan(e.target.value)}
-								/>
-								<button type="submit" className="btn btn-info">
-									kirim
-								</button>
-							</ReplyBox>
-						</form>
+					{!notFound ? (
+						<>
+							<InfoBox>
+								<div className="me-2 back">
+									<span
+										className="cursor-pointer text-danger"
+										onClick={() => navigate(-1)}
+									>
+										&#8592;kembali
+									</span>
+								</div>
+								<div className="back">|</div>
+								<div className="ms-2">{room?.name}</div>
+							</InfoBox>
+							<RightWrapper>
+								<MessageWrapper id="messages">
+									{messages &&
+										messages.map((chat) => (
+											<CardWrapper key={chat.id} self={chat.self}>
+												<CardChat data={chat} self={chat.self} />
+											</CardWrapper>
+										))}
+								</MessageWrapper>
+								{profile ? (
+									<form onSubmit={(e) => handleSubmit(e)}>
+										<ReplyBox>
+											<input
+												className="form-control me-2"
+												type="text"
+												value={inputan}
+												onChange={(e) => setInputan(e.target.value)}
+											/>
+											<button type="submit" className="btn btn-info">
+												kirim
+											</button>
+										</ReplyBox>
+									</form>
+								) : (
+									<NoLogin>Login untuk join chat</NoLogin>
+								)}
+							</RightWrapper>
+						</>
 					) : (
-						<NoLogin>Login untuk join chat</NoLogin>
+						<NotFound>
+							<ErrorNotFound text="Ruang chat tidak ditemukan atau sudah dihapus" />
+						</NotFound>
 					)}
 				</RightSection>
 			</Wrapper>

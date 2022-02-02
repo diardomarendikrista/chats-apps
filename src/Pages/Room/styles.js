@@ -9,9 +9,10 @@ export const Wrapper = styled.div`
 export const RightSection = styled.div`
 	position: relative;
 	width: 90%;
-	padding: 20px 20px 60px 20px;
+	padding: 0;
 	box-shadow: 0px 0px 25px -4px gray;
 	border-radius: 10px;
+	overflow: hidden;
 
 	@media (max-width: ${M_DEVICES_WIDTH}) {
 		width: 87%;
@@ -21,6 +22,11 @@ export const RightSection = styled.div`
 		width: 95%;
 	}
 `;
+
+export const RightWrapper = styled.div`
+	position: relative;
+	padding: 0px 20px 60px 20px;
+`
 
 export const BtnLeftSection = styled.div`
 	position: absolute;
@@ -84,7 +90,7 @@ export const LeftSection = styled.div`
 export const MessageWrapper = styled.div`
 	height: 75vh;
 	overflow: auto;
-	margin-bottom: 10px;
+	margin: 18px 0px 10px 0px;
 `;
 
 export const CardWrapper = styled.div`
@@ -98,6 +104,32 @@ export const CardWrapper = styled.div`
 		css`
 			align-items: end;
 		`}
+`;
+
+export const InfoBox = styled.div`
+	position: relative;
+	width: 100%;
+	top: 0px;
+	left: 0px;
+	display: flex;
+	padding: 5px 20px;
+	background: rgb(195, 234, 255);
+	background: linear-gradient(
+		90deg,
+		rgba(195, 234, 255, 1) 0%,
+		rgba(0, 164, 255, 1) 100%
+	);
+	overflow-x: hidden;
+	height: 35px;
+
+	.back {
+		position: sticky;
+		top: 0px;
+	}
+
+	@media (max-width: ${S_DEVICES_WIDTH}) {
+		padding-left: 40px;
+	}
 `;
 
 export const ReplyBox = styled.div`
@@ -115,4 +147,8 @@ export const NoLogin = styled.div`
 	bottom: 20px;
 	display: flex;
 	justify-content: center;
+`;
+
+export const NotFound = styled.div`
+	height: 75vh;
 `;

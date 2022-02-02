@@ -10,7 +10,7 @@ export default function CardChat({ data }) {
 	const rawTime = new Date(data?.createdAt);
 	const time = moment(rawTime).format('LT');
 
-	const deleteMessage = (id) => {
+	const deleteMessage = (id, room_id) => {
 		console.log(id);
 		Swal.fire({
 			title: 'Hapus chat',
@@ -26,7 +26,10 @@ export default function CardChat({ data }) {
 				const headers = {
 					access_token: localStorage.getItem('access_token'),
 				};
-				const { data } = await axios.delete(`/messages/${id}`, { headers });
+				const { data } = await axios.delete(
+					`/messages/${id}?room_id=${room_id}`,
+					{ headers }
+				);
 				if (data) {
 					Swal.fire('Dihapus', 'chat berhasil dihapus', 'success');
 				}
@@ -41,11 +44,15 @@ export default function CardChat({ data }) {
 				bgColor={data?.User?.color}
 			>
 				<Card.Top>
-					<div className='userName'>
+					<div className="userName">
 						<b>{data?.User?.name}</b>
 					</div>
-					{profile?.id === data?.User.id && (
-						<Card.DelMessage onClick={() => deleteMessage(data?.id)}>
+					{(profile?.id === data?.User.id ||
+						profile?.role === 'admin' ||
+						profile?.role === 'moderator') && (
+						<Card.DelMessage
+							onClick={() => deleteMessage(data?.id, data?.room_id)}
+						>
 							x
 						</Card.DelMessage>
 					)}

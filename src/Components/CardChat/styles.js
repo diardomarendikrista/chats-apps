@@ -2,6 +2,7 @@ import styled, { css } from 'styled-components';
 
 export const Card = {
 	Wrapper: styled.div`
+		position: relative;
 		display: inline-block;
 		padding: 5px 20px;
 		background-color: #f0f1f5;

@@ -1,36 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Layout from 'Layout/layout';
-import { Wrapper, RightSection, CardRoom } from './styles';
+import { Wrapper, RightSection } from './styles';
 import axios from 'axios/axios';
 import ModalNewRoom from 'Components/ModalNewRoom';
+import CardRoom from 'Components/CardRoom';
 import { ws } from 'socket/ws';
 
 export default function Home() {
 	// eslint-disable-next-line
 	const { profile, isLogin, refetchUser } = useSelector((state) => state.user);
 	const { rooms } = useSelector((state) => state.room);
+	const { netizen } = useSelector((state) => state.global);
 	const [showModalNewRoom, setShowModalNewRoom] = useState(false);
 	// eslint-disable-next-line
 	const [loading, setLoading] = useState(false);
 
 	const dispatch = useDispatch();
-
-	const handleDeleteRoom = async (id) => {
-		try {
-			setLoading(true);
-			console.log(id, 'ROOM ID');
-			const headers = {
-				access_token: localStorage.getItem('access_token'),
-			};
-			const { data } = await axios.delete(`/rooms/${id}`, { headers });
-			console.log(data, 'DATA');
-		} catch (error) {
-			console.log(error, 'ERROR DEL ROOM');
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	const fetchRooms = async () => {
 		try {
@@ -54,7 +40,9 @@ export default function Home() {
 			};
 			const { data } = await axios.get('/user', { headers });
 			if (data) {
-				ws.emit('login', data.user);
+				let dataUser = data.user;
+				dataUser.room = '';
+				ws.emit('login', dataUser);
 				dispatch({ type: 'profile/setProfile', payload: data.user });
 			}
 		} catch (error) {
@@ -62,6 +50,10 @@ export default function Home() {
 		} finally {
 			setLoading(false);
 		}
+	};
+	
+	const updateNetizen = (dataNetizen) => {
+		dispatch({ type: 'netizen/setNetizen', payload: dataNetizen });
 	};
 
 	useEffect(() => {
@@ -73,15 +65,16 @@ export default function Home() {
 		fetchRooms();
 
 		ws.on('newRoom', newRoomCallback);
+		ws.on('updateNetizen', updateNetizen);
 
 		return () => {
 			ws.off('newRoom', newRoomCallback);
+			ws.off('updateNetizen', updateNetizen);
 		};
 		// eslint-disable-next-line
 	}, []);
 
 	const newRoomCallback = () => {
-		console.log('ter trigger??');
 		fetchRooms();
 	};
 
@@ -106,25 +99,17 @@ export default function Home() {
 		<Layout>
 			<Wrapper className="klob-max m-auto d-flex justify-content-center">
 				<RightSection>
-					<button
-						className="btn btn-primary"
-						onClick={() => setShowModalNewRoom(true)}
-					>
-						Ruang Baru
-					</button>
-					<div>
+					{profile && (
+						<button
+							className="btn btn-primary mb-2"
+							onClick={() => setShowModalNewRoom(true)}
+						>
+							Ruang Baru
+						</button>
+					)}
+					<div className="d-flex flex-wrap">
 						{rooms?.length > 0 &&
-							rooms.map((room, i) => (
-								<CardRoom key={i}>
-									{room.name}{' '}
-									<span
-										className="text-danger cursor-pointer"
-										onClick={() => handleDeleteRoom(room.id)}
-									>
-										[delete]
-									</span>
-								</CardRoom>
-							))}
+							rooms.map((room, i) => <CardRoom key={i} room={room} netizen={netizen} />)}
 					</div>
 				</RightSection>
 			</Wrapper>
