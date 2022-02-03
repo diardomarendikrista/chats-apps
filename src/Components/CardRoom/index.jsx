@@ -14,11 +14,11 @@ export default function CardRoom({ room, netizen }) {
 
 	const navigate = useNavigate();
 
-	const handleDeleteRoom = (e, id) => {
+	const handleDeleteRoom = (e, id, name) => {
 		e.stopPropagation();
 		Swal.fire({
-			title: 'Hapus chat',
-			text: 'Yakin hapus chat ini?',
+			title: `Yakin Hapus Ruangan ${name} ?`,
+			text: 'Ruangan akan dihapus beserta SELURUH history chat didalamnya. Aksi ini tidak dapat dipulihkan kembali.',
 			icon: 'warning',
 			showCancelButton: true,
 			confirmButtonColor: '#3085d6',
@@ -71,7 +71,7 @@ export default function CardRoom({ room, netizen }) {
 					<div className="d-flex justify-content-between">
 						<h3>{room.name}</h3>
 						{(profile?.id === room?.User?.id || profile?.role === 'admin') && (
-							<Card.Delete onClick={(e) => handleDeleteRoom(e, room.id)}>
+							<Card.Delete onClick={(e) => handleDeleteRoom(e, room.id, room.name)}>
 								x
 							</Card.Delete>
 						)}

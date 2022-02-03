@@ -97,7 +97,7 @@ export default function Home() {
 
 	return (
 		<Layout>
-			<Wrapper className="klob-max m-auto d-flex justify-content-center">
+			<Wrapper className="m-auto d-flex justify-content-center">
 				<RightSection>
 					{profile && (
 						<button

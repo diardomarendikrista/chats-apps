@@ -10,8 +10,9 @@ export const RightSection = styled.div`
 	position: relative;
 	width: 90%;
 	padding: 0;
-	box-shadow: 0px 0px 25px -4px gray;
-	border-radius: 10px;
+	/* background-color:rgba(255, 255, 255, 0.30); */
+	box-shadow: 0px 4px 8px 0px gray;
+	border-radius: 5px;
 	overflow: hidden;
 
 	@media (max-width: ${M_DEVICES_WIDTH}) {
@@ -88,7 +89,7 @@ export const LeftSection = styled.div`
 `;
 
 export const MessageWrapper = styled.div`
-	height: 75vh;
+	height: 70vh;
 	overflow: auto;
 	margin: 18px 0px 10px 0px;
 `;

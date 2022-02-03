@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 
 import axios from 'axios/axios';
 
-export default function ModalDefault({ ...props }) {
+export default function ModalLogin({ ...props }) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 

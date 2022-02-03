@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 
 import axios from 'axios/axios';
 
-export default function ModalDefault({ ...props }) {
+export default function ModalRegister({ ...props }) {
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');

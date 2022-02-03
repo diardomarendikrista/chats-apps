@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 
 import axios from 'axios/axios';
 
-export default function ModalDefault({ ...props }) {
+export default function ModalNewRoom({ ...props }) {
 	const [name, setName] = useState('');
 
 	const handleSubmit = async (e) => {
@@ -20,7 +20,7 @@ export default function ModalDefault({ ...props }) {
 				const headers = {
 					access_token: localStorage.getItem('access_token'),
 				};
-				const { data } = await axios.post(`/rooms`, saveData, { headers });
+				await axios.post(`/rooms`, saveData, { headers });
 
 				Swal.fire('Berhasil', `Ruangan ${name} berhasil dibuat`, 'success');
 

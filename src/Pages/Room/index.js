@@ -130,10 +130,11 @@ export default function Home() {
 			fetchUser();
 		}
 		if (!lastRoom || lastRoom !== room_id) {
-			dispatch({ type: 'lastRoom/setLastRoom', payload: room_id});
+			dispatch({ type: 'lastRoom/setLastRoom', payload: room_id });
 			dispatch({ type: 'message/setMessage', payload: false });
+			dispatch({ type: 'room/setRoom', payload: false });
 		}
-		
+
 		fetchRoom();
 		fetchMessage();
 
@@ -183,7 +184,7 @@ export default function Home() {
 
 	return (
 		<Layout>
-			<Wrapper className="klob-max m-auto d-flex justify-content-end">
+			<Wrapper className="m-auto d-flex justify-content-end">
 				<BtnLeftSection onClick={() => setSidebar(!sidebar)}>
 					<img
 						src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/512x512/users5.png"
@@ -208,7 +209,7 @@ export default function Home() {
 									</span>
 								</div>
 								<div className="back">|</div>
-								<div className="ms-2">{room?.name}</div>
+								<div className="ms-2">{room?.name ?? "....."}</div>
 							</InfoBox>
 							<RightWrapper>
 								<MessageWrapper id="messages">
@@ -227,8 +228,9 @@ export default function Home() {
 												type="text"
 												value={inputan}
 												onChange={(e) => setInputan(e.target.value)}
+												disabled={loading}
 											/>
-											<button type="submit" className="btn btn-info">
+											<button type="submit" className="btn btn-info" disabled={loading}>
 												kirim
 											</button>
 										</ReplyBox>

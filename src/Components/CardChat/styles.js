@@ -5,7 +5,8 @@ export const Card = {
 		position: relative;
 		display: inline-block;
 		padding: 5px 20px;
-		background-color: #f0f1f5;
+		/* background-color: #f0f1f5; */
+		background-color: #fff;
 		border-radius: 20px;
 
 		.userName {
